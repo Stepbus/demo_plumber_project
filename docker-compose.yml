@@ -1,0 +1,63 @@
+version: '3.7'
+
+services:
+  web:
+    build: .
+    container_name: ben-django
+    command: sh -c 'python manage.py migrate && python manage.py runserver 0.0.0.0:8000'
+    volumes:
+      - .:/app
+    ports:
+      - '8000:8000'
+
+  postgres-django:
+    container_name: ben-postgres
+    image: postgres:12.4
+    restart: always
+    hostname: ben-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    expose:
+      - '5432'
+    volumes:
+      - ./data/postgres-db:/var/lib/postgresql/data:rw
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: ben_rabbitmq
+    hostname: rabbit
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASS}
+    restart: on-failure
+
+  worker_celery:
+    build: .
+    container_name: ben_worker
+    restart: always
+    environment:
+      - BROKER_URL=amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@ben_rabbitmq:5672//
+    command: sh -c "sleep 8; celery -A celery_module.celery_app worker --loglevel=INFO"
+    volumes:
+      - .:/app
+    depends_on:
+      - rabbitmq
+
+  beat_celery:
+    build: .
+    container_name: ben_beat
+    restart: always
+    environment:
+      - BROKER_URL=amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@ben_rabbitmq:5672//
+    command: sh -c "sleep 11; celery -A celery_module.celery_app beat --loglevel=INFO"
+    volumes:
+      - .:/app
+    depends_on:
+      - worker_celery
