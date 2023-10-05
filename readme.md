@@ -1,13 +1,15 @@
-This bot searches for new vacancies by keyword and receives data about them.
+Description:
 
-After that, the bot performs some actions on the web page and sends an email to the client about these actions.
+    This bot searches for new vacancies using keywords and retrieves data from selected ads.
+    After that, the bot performs certain actions on the web page (sends messages to customers)
+    Then the bot sends an email to the bot owner about the clients' responses
+    
+TECHNOLOGY STACK:
 
-Using libraries for scraping: Selenium, requests
-
-Scheduled launch using Celery
-
-Data is stored in Postgres
-
-The dashboard uses the Django admin panel
- 
-Docker is used
+    Selenium
+    Requests
+    Celery
+    PostgreSQL
+    Django admin panel     
+    Docker
+    Loguru
